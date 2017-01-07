@@ -1,0 +1,37 @@
+<body>
+<script src="ges-graphics/math/math-utils.js"></script>
+<script src="ges-graphics/math/vector.js"></script>
+<script src="ges-graphics/rendering/index.js"></script>
+
+<script src="behavior/behavior.js"></script>
+<script src="behavior/behavior-system.js"></script>
+
+<script src="src/screens/main.js"></script>
+
+<script>
+	'use strict';
+
+	let canvas = document.createElement('canvas');
+	canvas.width = document.body.clientWidth;
+	canvas.height = document.body.clientHeight;
+	document.body.appendChild(canvas);
+
+	let context = canvas.getContext('2d');
+
+	let doRender = function() {};
+	let screen = MainScreen(context, function(render) {
+		doRender = render;
+	});
+
+	let lastTime = performance.now();
+	requestAnimationFrame(function render() {
+		let time = performance.now();
+		let dt = (time - lastTime) * 0.001;
+		lastTime = time;
+
+		doRender();
+
+		requestAnimationFrame(render);
+	});
+</script>
+</body>
