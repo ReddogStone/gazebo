@@ -1,0 +1,3 @@
+[submodule "ges-graphics"]
+	path = ges-graphics
+	url = https://reddogstone:Basilisk84@github.com/ReddogStone/ges-graphics
