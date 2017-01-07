@@ -1,3 +1,10 @@
 [submodule "ges-graphics"]
 	path = ges-graphics
 	url = https://reddogstone:Basilisk84@github.com/ReddogStone/ges-graphics
+	branch = master
+	ignore = all
+[submodule "behavior"]
+	path = behavior
+	url = https://reddogstone:Basilisk84@github.com/ReddogStone/behavior.js
+	branch = master
+	ignore = all
