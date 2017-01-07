@@ -29,6 +29,8 @@
 		let dt = (time - lastTime) * 0.001;
 		lastTime = time;
 
+		screen({ type: 'update', dt: dt });
+
 		doRender();
 
 		requestAnimationFrame(render);
