@@ -1,4 +1,4 @@
-<body>
+<body style="width:100%; min-width:100%; height:100%; min-height:100%; padding:0; margin:0;">
 <script src="ges-graphics/math/math-utils.js"></script>
 <script src="ges-graphics/math/vector.js"></script>
 <script src="ges-graphics/rendering/index.js"></script>
@@ -12,14 +12,15 @@
 	'use strict';
 
 	let canvas = document.createElement('canvas');
-	canvas.width = document.body.clientWidth;
-	canvas.height = document.body.clientHeight;
+	canvas.setAttribute('style', 'width:100%; min-width:100%; height:100%; min-height:100%;');
 	document.body.appendChild(canvas);
+	canvas.width = canvas.clientWidth;
+	canvas.height = canvas.clientHeight;
 
 	let context = canvas.getContext('2d');
 
 	let doRender = function() {};
-	let screen = MainScreen(context, function(render) {
+	let screen = MainScreen(function(render) {
 		doRender = render;
 	});
 
@@ -31,9 +32,14 @@
 
 		screen({ type: 'update', dt: dt });
 
-		doRender();
+		doRender(context);
 
 		requestAnimationFrame(render);
+	});
+
+	window.addEventListener('resize', function(event) {
+		canvas.width = canvas.clientWidth;
+		canvas.height = canvas.clientHeight;
 	});
 </script>
 </body>

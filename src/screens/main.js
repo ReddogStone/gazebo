@@ -1,10 +1,6 @@
 'use strict';
 
-const MainScreen = function(context, setRender) {
-	let canvas = context.canvas;
-
-	let camera = makeCamera(vec(canvas.width, canvas.height), vec(0, 0), 0, vec(0.1, 0.1));
-
+const MainScreen = function(setRender) {
 	const randomChannel = () => Math.floor(Math.random() * 256);
 
 	let quads = [];
@@ -39,7 +35,9 @@ const MainScreen = function(context, setRender) {
 		filledWithBorder: Materials.filledWithBorder
 	};
 
-	setRender(function() {
+	setRender(function(context) {
+		let canvas = context.canvas;
+		let camera = makeCamera(vec(canvas.width, canvas.height), vec(0, 0), 0, vec(0.1, 0.1));
 		context.clearRect(0, 0, canvas.width, canvas.height);
 		renderScene(context, camera, quads, renderScripts, materials);		
 	});
