@@ -51,13 +51,13 @@
 		};
 	}
 
-	document.addEventListener('mousedown', function(event) {
+	canvas.addEventListener('mousedown', function(event) {
 		screen({ type: 'mousedown', pos: getMousePos(canvas, event) });
 	});
 	document.addEventListener('mouseup', function(event) {
 		screen({ type: 'mouseup', pos: getMousePos(canvas, event) });
 	});
-	document.addEventListener('mousemove', function(event) {
+	canvas.addEventListener('mousemove', function(event) {
 		screen({ type: 'mousemove', pos: getMousePos(canvas, event) });
 	});
 </script>

@@ -37,8 +37,9 @@ const MainScreen = function(setRender) {
 		const visibilityMaterial = {
 			id: 'filled',
 			params: {
-				fill: 'white',
+				fill: 'beige',
 				stroke: 'black',
+				dash: [0.05, 0.1],
 				lineWidth: 0.03
 			}
 		};
@@ -48,6 +49,11 @@ const MainScreen = function(setRender) {
 				transform: { position: vec(0, 0), rotation: 0, scale: vec(1, 1) },
 				renderScript: { id: 'polygon', params: { vertices: eye.visibilityVertices } },
 				material: visibilityMaterial
+			},
+			{
+				transform: Object.assign({}, transform, { scale: vscale(scale, 0.9) }),
+				renderScript: { id: 'arc', params: { start: 0, end: 2 * Math.PI } },
+				material: { id: 'filled', params: { fill: 'white' } }
 			},
 			{
 				transform: Object.assign({}, transform, { scale: vscale(scale, 0.9) }),
@@ -65,6 +71,23 @@ const MainScreen = function(setRender) {
 				material: lidMaterial
 			}
 		];
+	}
+
+	function makeVisibilityArea(eye) {
+		const visibilityMaterial = {
+			id: 'filledWithBorder',
+			params: {
+				fill: 'white',
+				stroke: 'black',
+				lineWidth: 0.03
+			}
+		};
+
+		return {
+			transform: { position: vec(0, 0), rotation: 0, scale: vec(1, 1) },
+			renderScript: { id: 'polygon', params: { vertices: eye.visibilityVertices } },
+			material: visibilityMaterial
+		};
 	}
 
 	function makeObject(object) {
@@ -229,6 +252,19 @@ const MainScreen = function(setRender) {
 		}
 	});
 
+	const rotateForever = speed => self => Behavior.update(function(dt) {
+		self.rotation += dt * speed;
+	});
+
+	const breathe = (min, max, speed) => self => {
+		let t = 0;
+		let originalScale = self.scale;
+		return Behavior.update(function(dt) {
+			t += dt;
+			self.scale = vscale(originalScale, min + (1 + Math.sin(t * speed)) * 0.5 * (max - min));
+		});
+	};
+
 	let objects = [
 		{
 			position: vec(-4, -2),
@@ -240,7 +276,7 @@ const MainScreen = function(setRender) {
 				vec(1, 0.5),
 				vec(1, -0.5)
 			],
-			behavior: goRoundAndRound(2)
+			behavior: rotateForever(1)
 		},
 		{
 			position: vec(5.5, -3.5),
@@ -252,7 +288,7 @@ const MainScreen = function(setRender) {
 				vec(0.25, 0.25),
 				vec(0.25, -0.25)
 			],
-			behavior: goRoundAndRound(3)
+			behavior: breathe(0.5, 2, 3)
 		},
 		{
 			position: vec(2, -1),
@@ -349,11 +385,7 @@ const MainScreen = function(setRender) {
 		};
 	}
 
-	function handleVisibility(eye, colliders) {
-		colliders.forEach(function(collider) {
-			collider.active = false;
-		});
-
+	function calculateVisibility(eye, colliders) {
 		const FOV = 0.15 * Math.PI;
 
 		let position = eye.position;
@@ -382,13 +414,18 @@ const MainScreen = function(setRender) {
 			.reduce((memo, current) => memo.concat(current), []);
 		let allDirs = [minDir].concat(dirsWithOffsets, maxDir);
 
+		let visibleSet = new Set();
 		let visibilityVertices = allDirs.map(function(dir) {
 			let result = intersectRayPolygons(eye.position, dir, colliders);
-			result.polygon.active = true;
+			visibleSet.add(result.polygon);
 			return vadd(position, vscale(dir, result.dist));
 		});
 
-		return [vclone(eye.position)].concat(visibilityVertices);
+		return {
+			polygon: [vclone(eye.position)].concat(visibilityVertices),
+			visible: Array.from(visibleSet),
+			invisible: colliders.filter(collider => !visibleSet.has(collider))
+		};
 	}
 
 	let look = () => Behavior.run(function*() {
@@ -412,6 +449,7 @@ const MainScreen = function(setRender) {
 		behaviorSystem.add(filtered);
 	});
 
+	// let buffer = document.createElement('canvas');
 	let camera = makeCamera(vec(600, 400), vec(0, 0), 0, vec(0.1, 0.1));
 	setRender(function(context) {
 		let canvas = context.canvas;
@@ -421,13 +459,45 @@ const MainScreen = function(setRender) {
 		context.fillStyle = 'darkgray';
 		context.fillRect(0, 0, canvas.width, canvas.height);
 
+		// let visibility = makeVisibilityArea(eye);
+		// let visiblePolygons = eye.visible.map(makeObject);
+		// let eyeBody = makeEye(eye);
+
+		// if (canvas.width !== buffer.width) {
+		// 	buffer.width = canvas.width;
+		// }
+		// if (canvas.height !== buffer.height) {
+		// 	buffer.height = canvas.height;
+		// }
+		// let bufferContext = buffer.getContext('2d');
+
+		// bufferContext.clearRect(0, 0, buffer.width, buffer.height);
+
+		// bufferContext.globalCompositeOperation = 'source-over';
+		// renderScene(bufferContext, camera, [visibility], renderScripts, materials);
+
+		// bufferContext.globalCompositeOperation = 'source-in';
+		// bufferContext.fillStyle = 'green';
+		// bufferContext.fillRect(0, 0, buffer.width, buffer.height);
+
+		// bufferContext.globalAlpha = 0.7;
+		// bufferContext.globalCompositeOperation = 'source-over';
+		// bufferContext.fillStyle = 'green';
+		// bufferContext.fillRect(0, 0, buffer.width, buffer.height);
+
+		// bufferContext.globalAlpha = 1.0;
+		// bufferContext.globalCompositeOperation = 'destination-out';
+		// renderScene(bufferContext, camera, [visibility].concat(eyeBody, visiblePolygons), renderScripts, materials);
+
 		let renderObjects = [].concat(
 			makeBackground(bg),
 			makeEye(eye),
 			objects.map(makeObject)
 		);
 
-		renderScene(context, camera, renderObjects, renderScripts, materials);		
+		renderScene(context, camera, renderObjects, renderScripts, materials);
+
+		// context.drawImage(buffer, 0, 0);
 	});	
 
 	let t = 0;
@@ -447,10 +517,18 @@ const MainScreen = function(setRender) {
 			let d2 = vec(Math.cos(angle2), Math.sin(angle2));
 
 			let colliders = [bg].concat(objects);
-			eye.visibilityVertices = handleVisibility(eye, colliders);
+			let result = calculateVisibility(eye, colliders);
 
-			objects.forEach(function(object) {
-			});			
+			result.visible.forEach(function(object) {
+				object.active = true;
+			});
+			result.invisible.forEach(function(object) {
+				object.active = false;
+			});
+
+			eye.visibilityVertices = result.polygon;
+			eye.visible = result.visible.filter(object => object !== bg);
+			eye.invisible = result.invisible;
 		})
 	)
 };
