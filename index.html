@@ -7,7 +7,10 @@
 <script src="behavior/behavior.js"></script>
 <script src="behavior/behavior-system.js"></script>
 
+<script src="src/utils/maze.js"></script>
+
 <script src="src/screens/main.js"></script>
+<script src="src/screens/maze.js"></script>
 
 <script>
 	'use strict';
@@ -21,8 +24,12 @@
 	let context = canvas.getContext('2d');
 
 	let doRender = function() {};
-	let screen = MainScreen(function(render) {
-		doRender = render;
+	let screen = Behavior.run(function*() {
+		while (true) {
+			yield MazeScreen(function(render) {
+				doRender = render;
+			});
+		}
 	});
 
 	let lastTime = performance.now();
@@ -60,5 +67,13 @@
 	canvas.addEventListener('mousemove', function(event) {
 		screen({ type: 'mousemove', pos: getMousePos(canvas, event) });
 	});
+
+	document.addEventListener('keydown', function(event) {
+		screen({ type: 'keydown', event: event });
+	});
+	document.addEventListener('keyup', function(event) {
+		screen({ type: 'keyup', event: event });
+	});
+
 </script>
 </body>
